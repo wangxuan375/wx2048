@@ -48,6 +48,7 @@
   <ItemGroup>
      <Compile Include="Assets\Script\GameManager.cs" />
      <Compile Include="Assets\Script\GamePanel.cs" />
+     <Compile Include="Assets\Script\NumberCard.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>D:/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
