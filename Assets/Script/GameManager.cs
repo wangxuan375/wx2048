@@ -3,23 +3,21 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
-	public static GameManager _instance;
+	static private GameManager _instance;
 
 	public static GameManager Instance {
 		get { return _instance; }
 	}
 
-	void Awark() {
+	void Awake() {
 		_instance = this;
 	}
 
 	// Use this for initialization
 	void Start () {
-	
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
 	}
 }

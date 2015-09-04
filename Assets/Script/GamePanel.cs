@@ -3,13 +3,13 @@ using System.Collections;
 
 public class GamePanel : MonoBehaviour {
 
-	public static GamePanel _instance;
+	static private GamePanel _instance;
 
 	public static GamePanel Instance {
 		get { return _instance; }
 	}
 
-	void Awark() {
+	void Awake() {
 		_instance = this;
 	}
 
