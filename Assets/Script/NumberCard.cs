@@ -29,7 +29,7 @@ public class NumberCard : MonoBehaviour {
 	
 	}
 
-	public void Init(uint num) {
+	public void Init(uint num = 2) {
 		this.Number = num;
 		numtext.text = string.Format("{0}", this.Number);
 	}
