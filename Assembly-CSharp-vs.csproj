@@ -46,9 +46,10 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Script\GameManager.cs" />
-     <Compile Include="Assets\Script\GamePanel.cs" />
-     <Compile Include="Assets\Script\NumberCard.cs" />
+     <Compile Include="Assets\Script\Game\GameManager.cs" />
+     <Compile Include="Assets\Script\Game\GamePanel.cs" />
+     <Compile Include="Assets\Script\Game\NumberCard.cs" />
+     <Compile Include="Assets\Script\UI\ObjCard.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>D:/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
