@@ -2,28 +2,58 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class GamePanel : MonoBehaviour {
+class LogicPos {
+	public uint posX;
+	public uint posY;
 
-	static uint width = 4;
-	static uint height = 4;
+	public LogicPos(uint x, uint y) {
+		posX = x;
+		posY = y;
+	}
+}
+
+public class GamePanel : MonoBehaviour {
 
 	static private GamePanel _instance;
 	
 	public static GamePanel Instance {
 		get { return _instance; }
 	}
-	
-	public static uint Width {
-		get { return GamePanel.width; }
-	}
-	
-	public static uint Height {
-		get { return GamePanel.height; }
-	}
 
+	Dictionary<LogicPos, RectTransform> CardList = new Dictionary<LogicPos, RectTransform>();
+	//List<RectTransform> CardList = new List<RectTransform>();
+	
 	public GameObject prefabNumber;
 
 	public GamePanel() {
+	}
+
+	public void ResetPanel() {
+		foreach(KeyValuePair<LogicPos, RectTransform> p in CardList) {
+			GameObject.Destroy(p.Value.gameObject);
+		}
+		CardList.Clear();
+		for(int i = 0; i < 2; i++) {
+			uint posX, posY;
+			if(GameManager.Instance.ProduceCard(out posX, out posY)) {
+				var numcard = Instantiate(prefabNumber).GetComponent<RectTransform>();
+				var script = numcard.GetComponent<ObjCard>();
+				script.Init(posX, posY);
+				numcard.SetParent(gameObject.transform);
+				numcard.anchoredPosition = GetObjPosition(posX, posY);
+				var logicpos = new LogicPos(posX, posY);
+				CardList[logicpos] = numcard;
+			}
+		}
+	}
+
+	public Vector2 GetObjPosition(uint PosX, uint PosY) {
+		var index = (PosX - 1) * GameManager.Width + PosY;
+		var gameobj = GameObject.Find(string.Format("Bg_Obj{0}", index));
+		if (gameobj == null) {
+			throw new UnityException(string.Format("gameobj Bg_Obj{0} cannot found!", index));
+		}
+		return gameobj.GetComponent<RectTransform>().anchoredPosition;
 	}
 
 	void Awake() {
@@ -32,11 +62,7 @@ public class GamePanel : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		var numcard = Instantiate(prefabNumber).GetComponent<RectTransform>();
-		var script = numcard.GetComponent<ObjCard>();
-		script.Init();
-		numcard.SetParent(gameObject.transform);
-		numcard.anchoredPosition = GameObject.Find("Bg_Obj1").GetComponent<RectTransform>().anchoredPosition;
+
 	}
 	
 	// Update is called once per frame
@@ -44,11 +70,5 @@ public class GamePanel : MonoBehaviour {
 
 	}
 
-	public Vector2 GetPositionByIndex(uint index) {
-		var gameobj = GameObject.Find(string.Format("Bg_Obj{0}", index));
-		if (gameobj == null) {
-			throw new UnityException(string.Format("gameobj Bg_Obj{0} cannot found!", index));
-		}
-		return gameobj.GetComponent<RectTransform>().anchoredPosition;
-	}
+
 }
