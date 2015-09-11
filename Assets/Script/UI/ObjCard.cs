@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class ObjCard : MonoBehaviour {
 
 	public Text numtext;
-	public NumberCard card;
+	public uint number;
 	public uint posX;
 	public uint posY;
 	// Use this for initialization
@@ -21,12 +21,19 @@ public class ObjCard : MonoBehaviour {
 	public void Init(uint posx, uint posy, uint num = 2) {
 		posX = posx;
 		posY = posy;
-		card = new NumberCard(num);
-		numtext.text = string.Format("{0}", card.Number);
+		Number = num;
+		numtext.text = string.Format("{0}", Number);
 	}
 
-	public void SetNumber(uint num) {
-		card.Number = num;
-		numtext.text = string.Format("{0}", card.Number);
+	public uint Number {
+		set {
+			if (value % 2 != 0) {
+				throw new UnityException("nuber must be %2 == 0");
+			}
+			number = value;
+		}
+		get {
+			return number;
+		}
 	}
 }
