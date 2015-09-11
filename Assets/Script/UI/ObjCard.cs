@@ -31,6 +31,11 @@ public class ObjCard : MonoBehaviour {
 				throw new UnityException("nuber must be %2 == 0");
 			}
 			number = value;
+			/* todo 根据数字改变颜色
+			var image = gameObject.GetComponent<Image>();
+			if (number == 2)
+				image.color = Color.white;
+				*/
 		}
 		get {
 			return number;

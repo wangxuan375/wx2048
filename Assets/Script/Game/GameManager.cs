@@ -53,6 +53,26 @@ public class GameManager : MonoBehaviour {
 		return true;
 	}
 
+	public void OnPointerMove(Vector2 startPos, Vector2 endPos) {
+		Vector2 vec = endPos - startPos;
+		float absx = Mathf.Abs(vec.x);
+		float absy = Mathf.Abs(vec.y);
+		if (absx < 30.0f && absy < 30.0f) {
+			return;
+		}
+		if (absx > absy) {
+			if (vec.x > 0)
+				print ("right");
+			else
+				print ("left");
+		} else {
+			if (vec.y > 0) 
+				print ("Up");
+			else
+				print ("Down");
+		}
+	}
+
 	void Awake() {
 		_instance = this;
 	}

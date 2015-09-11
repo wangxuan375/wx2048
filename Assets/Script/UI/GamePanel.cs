@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -12,7 +14,7 @@ class LogicPos {
 	}
 }
 
-public class GamePanel : MonoBehaviour {
+public class GamePanel : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 
 	static private GamePanel _instance;
 	
@@ -24,6 +26,8 @@ public class GamePanel : MonoBehaviour {
 	//List<RectTransform> CardList = new List<RectTransform>();
 	
 	public GameObject prefabNumber;
+
+	private Vector2 pressPosition;
 
 	public GamePanel() {
 	}
@@ -54,6 +58,15 @@ public class GamePanel : MonoBehaviour {
 			throw new UnityException(string.Format("gameobj Bg_Obj{0} cannot found!", index));
 		}
 		return gameobj.GetComponent<RectTransform>().anchoredPosition;
+	}
+
+	public void OnPointerDown(PointerEventData eventdata) {
+		pressPosition = eventdata.position;
+	}
+
+	public void OnPointerUp(PointerEventData eventdata) {
+		Vector2 pointerUpPosition = eventdata.position;
+		GameManager.Instance.OnPointerMove(pressPosition, pointerUpPosition);
 	}
 
 	void Awake() {
