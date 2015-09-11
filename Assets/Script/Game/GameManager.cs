@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour {
 		havecard = new bool[GameManager.Width, GameManager.Height];
 	}
 
-	public bool HavaCard(uint posX, uint posY) {
+	public bool HaveCard(uint posX, uint posY) {
 		if (posX < 0 || posX >= Width || posY < 0 || posY >= Height) {
 			print (string.Format("What!!! Error Position [{0}, {1}]", posX, posY));
 			return true;
@@ -40,16 +40,18 @@ public class GameManager : MonoBehaviour {
 		posY = 0;
 		uint randcount = 0;
 		do {
-			posX = (uint)Random.Range((int)0, GameManager.Width) + 1;
-			posY = (uint)Random.Range((int)0, GameManager.Height) + 1;
+			posX = (uint)Random.Range((int)0, GameManager.Width);
+			posY = 1;//(uint)Random.Range((int)0, GameManager.Height);
 			randcount += 1;
 			if (randcount > 100) {
 				print ("rand error");
 				return false;
 			}
 			//print (string.Format("[{0}, {1}]", posX, posY));
-		} while(HavaCard(posX-1, posY-1));
-		havecard[posX-1, posY-1] = true;
+		} while(HaveCard(posX, posY));
+		havecard[posX, posY] = true;
+		posX += 1;
+		posY += 1;
 		return true;
 	}
 
@@ -67,9 +69,38 @@ public class GameManager : MonoBehaviour {
 				print ("left");
 		} else {
 			if (vec.y > 0) 
-				print ("Up");
+				ProcessUp();//print ("Up");
 			else
 				print ("Down");
+		}
+	}
+
+	public void ProcessUp() {
+		bool[,] tmp = new bool[GameManager.Width, GameManager.Height];
+		for (uint x = 1; x < GameManager.Height; x++) {
+			for (uint y = 0; y < GameManager.Width; y++) {
+				if (!HaveCard(x, y))			//没卡就不用处理了
+					continue;
+				uint dest_x = x-1;
+				for (dest_x = x-1; dest_x >= 0 && dest_x < GameManager.Height; dest_x--) {
+					if (tmp[dest_x, y])			// 被合并过了
+						break;
+					//print (string.Format("x:{0},y:{1}", x+1, y+1));
+					//print (string.Format("destx:{0}, y:{1}", dest_x+1, y+1));
+					if (HaveCard(dest_x, y) && GamePanel.Instance.GetCardNumber(x+1, y+1) != 
+					    GamePanel.Instance.GetCardNumber(dest_x+1, y+1)) // 不相等
+						break;
+				}
+				dest_x += 1;
+				if (dest_x != x) {
+					if (HaveCard(dest_x, y) && GamePanel.Instance.GetCardNumber(x+1, y+1) == GamePanel.Instance.GetCardNumber(dest_x+1, y+1))
+						tmp[dest_x, y] = true;
+					print ("MoveCard");
+					GamePanel.Instance.ProcessMoveCard(x+1, y+1, dest_x+1, y+1);
+					havecard[x, y] = false;
+					havecard[dest_x, y] = true;
+				}
+			}
 		}
 	}
 

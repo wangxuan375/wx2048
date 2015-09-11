@@ -1,10 +1,10 @@
 ﻿<Properties GitUserInfo="UsingMD">
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Script\Game\GameManager.cs">
     <Files>
-      <File FileName="Assets\Script\Game\GameManager.cs" Line="74" Column="2" />
-      <File FileName="Assets\Script\UI\ObjCard.cs" Line="33" Column="18" />
-      <File FileName="Assets\Script\UI\GamePanel.cs" Line="45" Column="5" />
+      <File FileName="Assets\Script\UI\GamePanel.cs" Line="44" Column="33" />
+      <File FileName="Assets\Script\Game\GameManager.cs" Line="89" Column="8" />
+      <File FileName="Assets\Script\UI\ObjCard.cs" Line="21" Column="50" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
