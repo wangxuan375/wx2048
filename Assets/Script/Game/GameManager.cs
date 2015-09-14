@@ -21,10 +21,10 @@ public class GameManager : MonoBehaviour {
 		get { return _instance; }
 	}
 
-	public bool[,] havecard;
+	public uint[,] cardnum;
 
 	public GameManager() {
-		havecard = new bool[GameManager.Width, GameManager.Height];
+		cardnum = new uint[GameManager.Width, GameManager.Height];
 	}
 
 	public bool HaveCard(uint posX, uint posY) {
@@ -32,7 +32,7 @@ public class GameManager : MonoBehaviour {
 			print (string.Format("What!!! Error Position [{0}, {1}]", posX, posY));
 			return true;
 		}
-		return havecard[posX, posY];
+		return (cardnum[posX, posY] > 0);
 	}
 
 	public bool ProduceCard(out uint posX, out uint posY) {
@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour {
 		uint randcount = 0;
 		do {
 			posX = (uint)Random.Range((int)0, GameManager.Width);
-			posY = 1;//(uint)Random.Range((int)0, GameManager.Height);
+			posY = (uint)Random.Range((int)0, GameManager.Height);
 			randcount += 1;
 			if (randcount > 100) {
 				print ("rand error");
@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour {
 			}
 			//print (string.Format("[{0}, {1}]", posX, posY));
 		} while(HaveCard(posX, posY));
-		havecard[posX, posY] = true;
+		cardnum[posX, posY] = 2;
 		posX += 1;
 		posY += 1;
 		return true;
@@ -64,44 +64,132 @@ public class GameManager : MonoBehaviour {
 		}
 		if (absx > absy) {
 			if (vec.x > 0)
-				print ("right");
+				ProcessRight();//print ("right");
 			else
-				print ("left");
+				ProcessLeft();//print ("left");
 		} else {
 			if (vec.y > 0) 
 				ProcessUp();//print ("Up");
 			else
-				print ("Down");
+				ProcessDown();//print ("Down");
 		}
+		GamePanel.Instance.ProcessMoveCard();
 	}
 
 	public void ProcessUp() {
-		bool[,] tmp = new bool[GameManager.Width, GameManager.Height];
+		bool[,] merge = new bool[GameManager.Width, GameManager.Height];
 		for (uint x = 1; x < GameManager.Height; x++) {
 			for (uint y = 0; y < GameManager.Width; y++) {
 				if (!HaveCard(x, y))			//没卡就不用处理了
 					continue;
 				uint dest_x = x-1;
 				for (dest_x = x-1; dest_x >= 0 && dest_x < GameManager.Height; dest_x--) {
-					if (tmp[dest_x, y])			// 被合并过了
+					if (merge[dest_x, y])			// 被合并过了
 						break;
-					//print (string.Format("x:{0},y:{1}", x+1, y+1));
-					//print (string.Format("destx:{0}, y:{1}", dest_x+1, y+1));
-					if (HaveCard(dest_x, y) && GamePanel.Instance.GetCardNumber(x+1, y+1) != 
-					    GamePanel.Instance.GetCardNumber(dest_x+1, y+1)) // 不相等
+					if (HaveCard(dest_x, y) && GetCardNumber(x, y) != GetCardNumber(dest_x, y)) // 不相等
 						break;
 				}
 				dest_x += 1;
 				if (dest_x != x) {
-					if (HaveCard(dest_x, y) && GamePanel.Instance.GetCardNumber(x+1, y+1) == GamePanel.Instance.GetCardNumber(dest_x+1, y+1))
-						tmp[dest_x, y] = true;
-					print ("MoveCard");
-					GamePanel.Instance.ProcessMoveCard(x+1, y+1, dest_x+1, y+1);
-					havecard[x, y] = false;
-					havecard[dest_x, y] = true;
+					bool destroy = false;
+					if (HaveCard(dest_x, y) && GetCardNumber(x, y) == GetCardNumber(dest_x, y)) {
+						merge[dest_x, y] = true;
+						destroy = true;
+					}
+					cardnum[dest_x, y] += cardnum[x, y];
+					cardnum[x, y] = 0;
+					GamePanel.Instance.SetCardTagPos(x+1, y+1, dest_x+1, y+1, destroy);
 				}
 			}
 		}
+	}
+
+	public void ProcessDown() {
+		bool[,] merge = new bool[GameManager.Width, GameManager.Height];
+		for (uint x = GameManager.Height - 2; x >= 0 && x < GameManager.Height; x--) {
+			for (uint y = 0; y < GameManager.Width; y++) {
+				if (!HaveCard(x, y))			//没卡就不用处理了
+					continue;
+				uint dest_x = x+1;
+				for (dest_x = x+1; dest_x < GameManager.Height; dest_x++) {
+					if (merge[dest_x, y])			// 被合并过了
+						break;
+					if (HaveCard(dest_x, y) && GetCardNumber(x, y) != GetCardNumber(dest_x, y)) // 不相等
+						break;
+				}
+				dest_x -= 1;
+				if (dest_x != x) {
+					bool destroy = false;
+					if (HaveCard(dest_x, y) && GetCardNumber(x, y) == GetCardNumber(dest_x, y)) {
+						merge[dest_x, y] = true;
+						destroy = true;
+					}
+					cardnum[dest_x, y] += cardnum[x, y];
+					cardnum[x, y] = 0;
+					GamePanel.Instance.SetCardTagPos(x+1, y+1, dest_x+1, y+1, destroy);
+				}
+			}
+		}
+	}
+
+	public void ProcessLeft() {
+		bool[,] merge = new bool[GameManager.Width, GameManager.Height];
+		for (uint y = 1; y < GameManager.Width; y++) {
+			for (uint x = 0; x < GameManager.Height; x++) {
+				if (!HaveCard(x, y))			//没卡就不用处理了
+					continue;
+				uint dest_y = y-1;
+				for (dest_y = y-1; dest_y >= 0 && dest_y < GameManager.Width; dest_y--) {
+					if (merge[x, dest_y])			// 被合并过了
+						break;
+					if (HaveCard(x, dest_y) && GetCardNumber(x, y) != GetCardNumber(x, dest_y)) // 不相等
+						break;
+				}
+				dest_y += 1;
+				if (dest_y != y) {
+					bool destroy = false;
+					if (HaveCard(x, dest_y) && GetCardNumber(x, y) == GetCardNumber(x, dest_y)) {
+						merge[x, dest_y] = true;
+						destroy = true;
+					}
+					cardnum[x, dest_y] += cardnum[x, y];
+					cardnum[x, y] = 0;
+					GamePanel.Instance.SetCardTagPos(x+1, y+1, x+1, dest_y+1, destroy);
+				}
+			}
+		}
+	}
+	
+	public void ProcessRight() {
+		bool[,] merge = new bool[GameManager.Width, GameManager.Height];
+		for (uint y = GameManager.Width - 2; y >= 0 && y < GameManager.Width; y--) {
+			for (uint x = 0; x < GameManager.Height; x++) {
+				if (!HaveCard(x, y))			//没卡就不用处理了
+					continue;
+				uint dest_y = y+1;
+				for (dest_y = y+1; dest_y < GameManager.Width; dest_y++) {
+					if (merge[x, dest_y])			// 被合并过了
+						break;
+					if (HaveCard(x, dest_y) && GetCardNumber(x, y) != GetCardNumber(x, dest_y)) // 不相等
+						break;
+				}
+				dest_y -= 1;
+				if (dest_y != y) {
+					bool destroy = false;
+					if (HaveCard(x, dest_y) && GetCardNumber(x, y) == GetCardNumber(x, dest_y)) {
+						merge[x, dest_y] = true;
+						destroy = true;
+					}
+					cardnum[x, dest_y] += cardnum[x, y];
+					cardnum[x, y] = 0;
+					GamePanel.Instance.SetCardTagPos(x+1, y+1, x+1, dest_y+1, destroy);
+				}
+			}
+		}
+	}
+
+	public uint GetCardNumber(uint posx, uint posy) {
+		return cardnum[posx, posy];
 	}
 
 	void Awake() {

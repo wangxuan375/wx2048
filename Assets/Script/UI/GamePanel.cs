@@ -28,7 +28,9 @@ public class GamePanel : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 	public GameObject prefabNumber;
 	private Vector2 pressPosition;
 
-	public float movespeed = 0.01f;
+	public float movespeed = 0.08f;
+	public int movenum = 0;
+	public bool until = true;
 
 	public GamePanel() {
 	}
@@ -40,33 +42,50 @@ public class GamePanel : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 		CardList.Clear();
 
 		for(int i = 0; i < 2; i++) {
-			uint posX, posY;
-			if(GameManager.Instance.ProduceCard(out posX, out posY)) {
-				var numcard = Instantiate(prefabNumber).GetComponent<RectTransform>();
-				var script = numcard.GetComponent<ObjCard>();
-				script.Init(posX, posY);
-				numcard.SetParent(gameObject.transform);
-				numcard.anchoredPosition = GetObjPosition(posX, posY);
-				var logicpos = new LogicPos(posX, posY);
-				CardList[logicpos] = numcard;
+			ProduceACard();
+		}
+	}
+
+	public void ProduceACard() {
+		uint posX, posY;
+		if(GameManager.Instance.ProduceCard(out posX, out posY)) {
+			var numcard = Instantiate(prefabNumber).GetComponent<RectTransform>();
+			var script = numcard.GetComponent<ObjCard>();
+			script.Init(posX, posY);
+			numcard.SetParent(gameObject.transform);
+			numcard.anchoredPosition = GetObjPosition(posX, posY);
+			var logicpos = new LogicPos(posX, posY);
+			CardList[logicpos] = numcard;
+		}
+	}
+
+	public void ProcessMoveCard() {
+		movenum = 0;
+		List<RectTransform> list = new List<RectTransform>();
+		foreach (KeyValuePair<LogicPos, RectTransform> p in CardList) {
+			var script = p.Value.GetComponent<ObjCard>();
+			if (!script.destroy)
+				list.Add(p.Value);
+			if (script.NeedtoMove()) {
+				StartCoroutine(MoveCard(p.Value));
+				movenum = 1;
 			}
 		}
-	}
-
-	public void ProcessMoveCard(uint currentPosX, uint currentPosY, uint tagPosX, uint tagPosY) {
-		var currentPos = new LogicPos(currentPosX, currentPosY);
-		if (!CardList.ContainsKey(currentPos)) {
-			print ("MoveCard Error CurrentPos");
-			return;
+		CardList.Clear();
+		foreach(RectTransform rect in list) {
+			var script = rect.GetComponent<ObjCard>();
+			var logicpos = new LogicPos(script.posX, script.posY);
+			CardList[logicpos] = rect;
 		}
-		var card = CardList[currentPos];
-		CardList.Remove(currentPos);
-		StartCoroutine(MoveCard(card, tagPosX, tagPosY));
+		list.Clear();
+		if (movenum > 0)
+			until = false;
 	}
 
-	IEnumerator MoveCard(RectTransform card, uint tagPosX, uint tagPosY) {
+	IEnumerator MoveCard(RectTransform card) {
+		var script = card.GetComponent<ObjCard>();
 		var currentpos = card.anchoredPosition;
-		var tagpos = GetObjPosition(tagPosX, tagPosY);
+		var tagpos = GetObjPosition(script.posX, script.posY);
 		var speed_x = (tagpos.x - currentpos.x) / movespeed;
 		var speed_y = (tagpos.y - currentpos.y) / movespeed;
 		bool stop = false;
@@ -79,22 +98,42 @@ public class GamePanel : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 			card.anchoredPosition = new Vector2(card.anchoredPosition.x + speed_x * Time.deltaTime, card.anchoredPosition.y + speed_y * Time.deltaTime);
 			yield return null;
 		}
-		var taglogic = new LogicPos(tagPosX, tagPosY);
-		if (CardList.ContainsKey(taglogic)) {
-			CardList[taglogic].GetComponent<ObjCard>().Number *= 2;
+		var logicpos = new LogicPos(script.posX, script.posY);
+		if (script.destroy) {
+			CardList[logicpos].GetComponent<ObjCard>().Number = GameManager.Instance.GetCardNumber(script.posX-1, script.posY-1);;
 			Destroy(card.gameObject);
 		} else {
-			card.GetComponent<ObjCard>().posX = tagPosX;
-			card.GetComponent<ObjCard>().posY = tagPosY;
 			card.anchoredPosition = tagpos;
-			CardList[taglogic] = card;
+			script.preposX = script.posX;
+			script.preposY = script.posY;
+			script.Number = GameManager.Instance.GetCardNumber(script.posX-1, script.posY-1);
+			CardList[logicpos] = card;
+		}
+		MoveFinish();
+	}
+
+	public void MoveFinish() {
+		if (movenum <= 0) {
+			return;
+		}
+		movenum -= 1;
+		if (movenum <= 0) {
+			movenum = 0;
+			ProduceACard();
+			until = true;
 		}
 	}
 
-	public uint GetCardNumber(uint posX, uint posY) {
-		LogicPos pos = new LogicPos(posX, posY);
-		var script = CardList[pos].GetComponent<ObjCard>();
-		return script.Number;
+	public void SetCardTagPos(uint cardPosX, uint cardPosY, uint tagPosX, uint tagPosY, bool destroy) {
+		var taglogic = new LogicPos(cardPosX, cardPosY);
+		if (CardList.ContainsKey(taglogic)) {
+			var objcard = CardList[taglogic].GetComponent<ObjCard>();
+			objcard.preposX = cardPosX;
+			objcard.preposY = cardPosY;
+			objcard.posX = tagPosX;
+			objcard.posY = tagPosY;
+			objcard.destroy = destroy;
+		}
 	}
 
 	public Vector2 GetObjPosition(uint PosX, uint PosY) {
@@ -111,6 +150,8 @@ public class GamePanel : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
 	}
 
 	public void OnPointerUp(PointerEventData eventdata) {
+		if (!until) 
+			return;
 		Vector2 pointerUpPosition = eventdata.position;
 		GameManager.Instance.OnPointerMove(pressPosition, pointerUpPosition);
 	}

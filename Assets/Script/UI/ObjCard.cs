@@ -8,6 +8,11 @@ public class ObjCard : MonoBehaviour {
 	public uint number;
 	public uint posX;
 	public uint posY;
+
+	public uint preposX;
+	public uint preposY;
+
+	public bool destroy;
 	// Use this for initialization
 	void Start () {
 	
@@ -19,10 +24,10 @@ public class ObjCard : MonoBehaviour {
 	}
 
 	public void Init(uint posx, uint posy, uint num = 2) {
-		posX = posx;
-		posY = posy;
+		posX = preposX = posx;
+		posY = preposY = posy;
 		Number = num;
-		numtext.text = string.Format("{0}", Number);
+		destroy = false;
 	}
 
 	public uint Number {
@@ -31,6 +36,7 @@ public class ObjCard : MonoBehaviour {
 				throw new UnityException("nuber must be %2 == 0");
 			}
 			number = value;
+			numtext.text = string.Format("{0}", Number);
 			/* todo 根据数字改变颜色
 			var image = gameObject.GetComponent<Image>();
 			if (number == 2)
@@ -40,5 +46,12 @@ public class ObjCard : MonoBehaviour {
 		get {
 			return number;
 		}
+	}
+
+	public bool NeedtoMove() {
+		if (preposX != posX || preposY != posY) {
+			return true;
+		}
+		return false;
 	}
 }
